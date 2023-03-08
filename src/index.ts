@@ -7,8 +7,11 @@ import commentRoutes from "./routes/comments";
 import authRoutes from "./routes/auth";
 import { ErrorHandle } from "./middlewares/error-handle";
 import cookieParser from "cookie-parser";
+import cors from "cors";
+
 const __PORT__ = 8000;
 const app = express();
+app.use(cors());
 dotenv.config({
   path: __dirname + "/.env",
 });

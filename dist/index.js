@@ -35,8 +35,10 @@ const comments_1 = __importDefault(require("./routes/comments"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const error_handle_1 = require("./middlewares/error-handle");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
+const cors_1 = __importDefault(require("cors"));
 const __PORT__ = 8000;
 const app = (0, express_1.default)();
+app.use((0, cors_1.default)());
 dotenv.config({
     path: __dirname + "/.env",
 });

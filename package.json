@@ -8,7 +8,7 @@
     "dev": "nodemon  ./src/index.ts",
     "copy-env": "copyfiles -u 1 ./src/.env ./dist",
     "build": "tsc -p .",
-    "build:app":"npm run build && npm run copy-env"
+    "build:app": "npm run build && npm run copy-env"
   },
   "keywords": [],
   "author": "",
@@ -22,6 +22,7 @@
     "@types/node": "^18.14.0",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "http-errors": "^2.0.0",
@@ -32,6 +33,7 @@
     "typescript": "^4.9.5"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.13",
     "@types/http-errors": "^2.0.1"
   }
 }
