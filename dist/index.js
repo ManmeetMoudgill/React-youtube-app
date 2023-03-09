@@ -38,7 +38,10 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const __PORT__ = 8000;
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)());
+app.use((0, cors_1.default)({
+    origin: "https://video-player-md.firebaseapp.com",
+    credentials: true,
+}));
 dotenv.config({
     path: __dirname + "/.env",
 });

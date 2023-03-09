@@ -11,7 +11,12 @@ import cors from "cors";
 
 const __PORT__ = 8000;
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://video-player-md.firebaseapp.com",
+    credentials: true,
+  })
+);
 dotenv.config({
   path: __dirname + "/.env",
 });
