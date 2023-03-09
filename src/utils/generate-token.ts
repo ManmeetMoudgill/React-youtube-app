@@ -10,6 +10,8 @@ export const saveToCookiesAndSendResponse = (
     .cookie("user_token", token, {
       sameSite: "none",
       secure: true,
+      expires: new Date(Date.now() + 360000000),
+      httpOnly: false,
     })
     .status(status)
     .json(data);
