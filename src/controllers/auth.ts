@@ -125,3 +125,19 @@ export const googleAuth = async (
     next(err);
   }
 };
+
+export const logout = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res.clearCookie("user_token").json({
+      success: true,
+      message: "User has been logged out",
+      status: 200,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -255,7 +255,8 @@ export const getUserVideosHistory = async (
         const VideoData = await Video.findOne<VideoModelType>({
           _id: video.videoId,
         });
-        if (!VideoData) return next(createError(404, "Video not found"));
+        //if currrent item video is not found them got to next iteration
+        if (!VideoData) return;
         return {
           video: VideoData,
           userId: video.userId,
@@ -265,19 +266,14 @@ export const getUserVideosHistory = async (
       })
     );
 
-    if (!videosHistory) {
-      return res.status(200).json({
+    if (list) {
+      res.status(200).json({
         success: true,
         status: 201,
-        message: "No videos found in history",
+        message: "Videos found in history",
+        videosHistory: list.filter((item) => item !== undefined),
       });
     }
-    res.status(200).json({
-      success: true,
-      status: 201,
-      message: "Videos found in history",
-      videosHistory: list,
-    });
   } catch (err) {
     next(err);
   }

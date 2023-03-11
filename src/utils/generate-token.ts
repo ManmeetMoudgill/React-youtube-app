@@ -8,10 +8,8 @@ export const saveToCookiesAndSendResponse = (
 ): void => {
   res
     .cookie("user_token", token, {
-      sameSite: "none",
-      secure: true,
-      expires: new Date(Date.now() + 360000000),
-      httpOnly: false,
+      expires: new Date(Date.now() + 3600000),
+      httpOnly: true,
     })
     .status(status)
     .json(data);
