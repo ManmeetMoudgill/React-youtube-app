@@ -23,12 +23,12 @@ process.on("uncaughtException", (err) => {
 
 const __PORT__ = 8000;
 const app = express();
+app.use(cors());
 dotenv.config({
   path: __dirname + "/.env",
 });
 app.use(cookieParser());
 app.use(express.json());
-app.use(cors());
 app.use("/api/users", userRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/comments", commentRoutes);
