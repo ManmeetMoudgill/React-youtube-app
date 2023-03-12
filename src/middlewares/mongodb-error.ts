@@ -7,6 +7,15 @@ const mongoDbErrorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  if (err.name === "ValidationError") {
+    const message = Object.values(err.errors).map((val: any) => val.message);
+    return next(createError(400, message));
+  }
+
+  if (err.name === "CastError") {
+    return next(createError(400, "Resource not found"));
+  }
+
   if (err.name === "MongoError") {
     // handle MongoDB-specific errors
     switch (err.code) {

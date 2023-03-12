@@ -35,8 +35,8 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
 
 //Middleware for error handling
-app.use(ErrorHandle);
 app.use(mongoDbErrorHandler);
+app.use(ErrorHandle);
 
 app.listen(__PORT__, (): void => {
   connectToDb();
