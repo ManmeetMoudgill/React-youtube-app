@@ -5,30 +5,24 @@ import createError from "http-errors";
 import { transformedUser } from "../utils/return-user";
 import Video, { VideoModelType } from "../models/Video";
 import { VideoHistoryModel } from "../models/VideosHistory";
-export const getUsers = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const users = await User.find();
-    if (!users || users.length === 0) {
-      res.status(200).json({ message: "No users found" });
-    }
-    {
-      res.status(200).json({
-        message: "Users found",
-        users,
-      });
-    }
-  } catch (error) {
-    res.status(404).json({ message: (error as Error)?.message });
+import asyncMiddleware from "../middlewares/catch-async-errors";
+
+export const getUsers = asyncMiddleware(async (req: Request, res: Response) => {
+  const users = await User.find();
+  if (!users || users.length === 0) {
+    res.status(200).json({ message: "No users found" });
   }
-};
+  {
+    res.status(200).json({
+      message: "Users found",
+      users,
+    });
+  }
+});
 
 //get a user by id
-export const getUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const getUser = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const user = await User.findById(req?.params?.id);
     if (!user) return next(createError(402, "User not found"));
 
@@ -37,18 +31,12 @@ export const getUser = async (
       message: "User fetched successfully",
       user: transformedUser(user),
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //subscribe a another user
-export const subscribeUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const subscribeUser = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { userId: channelId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -66,18 +54,12 @@ export const subscribeUser = async (
       message: "Subscription Successfull",
       status: 200,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //unsubscribe a another user
-export const unSubscribeUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const unSubscribeUser = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { userId: channelId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -96,18 +78,12 @@ export const unSubscribeUser = async (
       message: "Unsubscription Successfull",
       status: 200,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //like a video
-export const likeVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const likeVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { videoId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -121,18 +97,12 @@ export const likeVideo = async (
       success: true,
       status: 200,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //unlike a video
-export const unlikeVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const unlikeVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { videoId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -145,23 +115,17 @@ export const unlikeVideo = async (
       success: true,
       status: 200,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //update a user
 
-export const updateUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if ((req as CustomRequest)?.user?._id?.toString() !== req.params?.id) {
-    return next(createError(401, "Unauthorized"));
-  }
+export const updateUser = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    if ((req as CustomRequest)?.user?._id?.toString() !== req.params?.id) {
+      return next(createError(401, "Unauthorized"));
+    }
 
-  try {
     const updatedUser = await User.findByIdAndUpdate(
       req.params?.id,
       {
@@ -179,21 +143,15 @@ export const updateUser = async (
       updatedUser,
     });
     if (!updatedUser) return next(createError(404, "User not found"));
-  } catch (err) {
-    next(err);
   }
-};
+);
 
 //delete a user by id
-export const deleteUser = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  if (req.params?.id !== (req as CustomRequest)?.user?._id?.toString())
-    return next(createError(401, "Unauthorized"));
+export const deleteUser = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (req.params?.id !== (req as CustomRequest)?.user?._id?.toString())
+      return next(createError(401, "Unauthorized"));
 
-  try {
     await User.findByIdAndDelete(req.params?.id);
 
     res.status(200).json({
@@ -201,17 +159,11 @@ export const deleteUser = async (
       status: 201,
       message: "User has been deleted successfully",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const insertUserVideosHistory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const insertUserVideosHistory = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const videoHistoryFound = await VideoHistoryModel.findOne({
       videoId: req.body.videoId,
       userId: req.body.userId,
@@ -233,17 +185,11 @@ export const insertUserVideosHistory = async (
       status: 201,
       message: "Video  inserted  into history successfully",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const getUserVideosHistory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const getUserVideosHistory = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
 
     const videosHistory = await VideoHistoryModel.find({
@@ -274,17 +220,11 @@ export const getUserVideosHistory = async (
         videosHistory: list.filter((item) => item !== undefined),
       });
     }
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const deleteVideosHistory = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const deleteVideosHistory = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     //get the videoHistory id from the request params
     const { id } = req.params;
 
@@ -295,7 +235,5 @@ export const deleteVideosHistory = async (
       status: 201,
       message: "Video history deleted successfully",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);

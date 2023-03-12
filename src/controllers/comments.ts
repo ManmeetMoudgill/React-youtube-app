@@ -2,13 +2,10 @@ import { NextFunction, Request, Response } from "express";
 import { CustomRequest } from "../types/auth";
 import Comment, { CommentModelType } from "../models/Comment";
 import createHttpError from "http-errors";
+import asyncMiddleware from "../middlewares/catch-async-errors";
 
-export const getVideoComments = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const getVideoComments = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     //getting the videoId
     const { id: videoId } = req.params;
 
@@ -21,17 +18,11 @@ export const getVideoComments = async (
       status: 200,
       message: "Comments fetched successfully!",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const insertVideoComment = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const insertVideoComment = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     //getting the videoId
     const { id: videoId } = req.params;
 
@@ -52,38 +43,34 @@ export const insertVideoComment = async (
       status: 200,
       message: "Comment added successfully!",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const deleteVideoComment = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //getting the videoId
-  const { videoId, commentId } = req.params;
+export const deleteVideoComment = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    //getting the videoId
+    const { videoId, commentId } = req.params;
 
-  //getting the userId from the request
-  const { _id } = (req as CustomRequest)?.user;
+    //getting the userId from the request
+    const { _id } = (req as CustomRequest)?.user;
 
-  const comment = await Comment.findOne<CommentModelType>({
-    videoId: videoId,
-    _id: commentId,
-  });
-  if (!comment) return next(createHttpError(400, "No comments found!"));
+    const comment = await Comment.findOne<CommentModelType>({
+      videoId: videoId,
+      _id: commentId,
+    });
+    if (!comment) return next(createHttpError(400, "No comments found!"));
 
-  if (comment.userId !== _id?.toString())
-    return next(
-      createHttpError(400, "You are not authorized to delete this comment!")
-    );
+    if (comment.userId !== _id?.toString())
+      return next(
+        createHttpError(400, "You are not authorized to delete this comment!")
+      );
 
-  await comment.delete();
+    await comment.delete();
 
-  res.status(200).json({
-    success: true,
-    status: 200,
-    message: "Comment deleted successfully!",
-  });
-};
+    res.status(200).json({
+      success: true,
+      status: 200,
+      message: "Comment deleted successfully!",
+    });
+  }
+);

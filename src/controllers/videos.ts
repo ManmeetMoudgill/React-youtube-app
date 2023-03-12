@@ -4,12 +4,10 @@ import { CustomRequest } from "../types/auth";
 import createHttpError from "http-errors";
 import { VideoModelType } from "../models/Video";
 import User, { UserModelType } from "../models/User";
-export const createVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+import asyncMiddleware from "../middlewares/catch-async-errors";
+
+export const createVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const video = new Video<VideoModelType>({
       userId: (req as CustomRequest)?.user?._id,
       ...req.body,
@@ -27,17 +25,11 @@ export const createVideo = async (
       success: true,
       video: savedVideo,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const updateVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const updateVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { id: videoId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -64,18 +56,13 @@ export const updateVideo = async (
       status: 200,
       video: updatedVideo,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const getVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id: videoId } = req.params;
-  try {
+export const getVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { id: videoId } = req.params;
+
     const video = await Video.findById(videoId);
     if (!video) return next(createHttpError(400, "Video not found"));
 
@@ -94,17 +81,11 @@ export const getVideo = async (
         user,
       },
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const deleteVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const deleteVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const { id: videoId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
@@ -122,18 +103,13 @@ export const deleteVideo = async (
       success: true,
       status: 200,
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const incrementViews = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //getting the videoId
-  try {
+export const incrementViews = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    //getting the videoId
+
     const { id: videoId } = req.params;
 
     const video = await Video.findById<VideoModelType>(videoId);
@@ -146,17 +122,11 @@ export const incrementViews = async (
       status: 200,
       message: "Video views incremented",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const getRandomVideos = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const getRandomVideos = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const videos = await Video.aggregate<VideoModelType>([
       {
         $sample: { size: 40 },
@@ -181,17 +151,11 @@ export const getRandomVideos = async (
       videos: videosWithUser.flat(),
       message: "Random videos fetched successfully",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const getTrendVideos = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
+export const getTrendVideos = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
     const videos = await Video.find().sort({ views: -1 }).limit(40);
 
     res.status(200).json({
@@ -200,92 +164,84 @@ export const getTrendVideos = async (
       videos,
       message: "Trend videos fetched successfully",
     });
-  } catch (err) {
-    next(err);
   }
-};
+);
 
-export const subscribedChannelVideo = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  //get the id user who is lgged in
-  const { _id } = (req as CustomRequest)?.user;
+export const subscribedChannelVideo = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    //get the id user who is lgged in
+    const { _id } = (req as CustomRequest)?.user;
 
-  //get the user subscribedUser
-  const user = await User.findById<UserModelType>(_id);
-  if (!user) next(createHttpError("401", "User not found"));
+    //get the user subscribedUser
+    const user = await User.findById<UserModelType>(_id);
+    if (!user) next(createHttpError("401", "User not found"));
 
-  const subscribedUsers: string[] | undefined = user?.subscribedUsers;
-  if (!subscribedUsers)
-    return next(createHttpError("401", "Subscribed Channels not found"));
+    const subscribedUsers: string[] | undefined = user?.subscribedUsers;
+    if (!subscribedUsers)
+      return next(createHttpError("401", "Subscribed Channels not found"));
 
-  const list = await Promise.all(
-    subscribedUsers?.map((channelId) => {
-      return Video.find({ userId: channelId });
-    })
-  );
+    const list = await Promise.all(
+      subscribedUsers?.map((channelId) => {
+        return Video.find({ userId: channelId });
+      })
+    );
 
-  res.status(200).json({
-    success: true,
-    status: 200,
-    videos: list?.flat(),
-  });
-};
+    res.status(200).json({
+      success: true,
+      status: 200,
+      videos: list?.flat(),
+    });
+  }
+);
 
-export const getVideosByTags = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { tags } = req.query;
-  const tagsArray = (tags as string)?.split(",");
+export const getVideosByTags = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { tags } = req.query;
+    const tagsArray = (tags as string)?.split(",");
 
-  const videos = await Video.find({ tags: { $in: tagsArray } }).limit(20);
+    const videos = await Video.find({ tags: { $in: tagsArray } }).limit(20);
 
-  const list = await Promise.all(
-    videos?.map(async (video) => {
-      const user = await User.findById<UserModelType>(video?.userId);
-      if (!user) next(createHttpError("401", "User not found"));
-      return {
-        video: video,
-        user,
-      };
-    })
-  );
+    const list = await Promise.all(
+      videos?.map(async (video) => {
+        const user = await User.findById<UserModelType>(video?.userId);
+        if (!user) next(createHttpError("401", "User not found"));
+        return {
+          video: video,
+          user,
+        };
+      })
+    );
 
-  if (!list) next(createHttpError("401", "Videos not found"));
+    if (!list) next(createHttpError("401", "Videos not found"));
 
-  res.status(200).json({
-    success: true,
-    message: "Videos by tags fetched successfully",
-    status: 200,
-    videos: list?.flat(),
-  });
-};
+    res.status(200).json({
+      success: true,
+      message: "Videos by tags fetched successfully",
+      status: 200,
+      videos: list?.flat(),
+    });
+  }
+);
 
-export const searchVideos = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { q } = req.query;
+export const searchVideos = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { q } = req.query;
 
-  const videos = await Video.find({
-    $or: [
-      { title: { $regex: q, $options: "i" } },
-      { description: { $regex: q, $options: "i" } },
-      { tags: { $in: q } },
-    ],
-  }).limit(20);
+    const videos = await Video.find({
+      $or: [
+        { title: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+        { tags: { $in: q } },
+      ],
+    }).limit(20);
 
-  if (!videos) next(createHttpError("401", "Videos not found"));
+    if (!videos) next(createHttpError("401", "Videos not found"));
 
-  res.status(200).json({
-    success: true,
-    message: "Videos by tags fetched successfully",
-    status: 200,
-    videos,
-  });
-};
+    res.status(200).json({
+      success: true,
+      message: "Videos by tags fetched successfully",
+      status: 200,
+      videos,
+    });
+  }
+);

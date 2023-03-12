@@ -5,19 +5,17 @@ import userRoutes from "./routes/users";
 import videoRoutes from "./routes/videos";
 import commentRoutes from "./routes/comments";
 import authRoutes from "./routes/auth";
-import { ErrorHandle } from "./middlewares/error-handle";
+import { ErrorMiddleware } from "./middlewares/error-handle";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import mongoDbErrorHandler from "./middlewares/mongodb-error";
+
 //cath the unHandledRejection and restart the server
-process.on("unhandledRejection", (err) => {
-  console.log("Unhandled Rejection! Shutting down...");
+process.on("unhandledRejection", () => {
   process.exit(1);
 });
 
 //cath the unCaughtException and restart the server
-process.on("uncaughtException", (err) => {
-  console.log("Uncaught Exception! Shutting down...");
+process.on("uncaughtException", () => {
   process.exit(1);
 });
 
@@ -35,8 +33,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
 
 //Middleware for error handling
-app.use(mongoDbErrorHandler);
-app.use(ErrorHandle);
+app.use(ErrorMiddleware);
 
 app.listen(__PORT__, (): void => {
   connectToDb();
