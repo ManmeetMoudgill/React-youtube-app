@@ -209,20 +209,26 @@ export const subscribedChannelVideo = asyncMiddleware(
       return next(createHttpError("401", "Subscribed Channels not found"));
 
     const list = await Promise.all(
-      subscribedUsers?.map((channelId) => {
+      subscribedUsers?.map(async (channelId) => {
         const VideosFeature = new ApiFeatures(
-          Video.find({ userId: channelId }),
+          Video.findOne({ userId: channelId }),
           req.query
         );
+
         VideosFeature.pagination(ROWS_PER_PAGE);
-        return VideosFeature.query;
+        const video = await VideosFeature.query;
+        if (!video) return;
+        return {
+          video,
+          user,
+        };
       })
     );
 
     res.status(200).json({
       success: true,
       status: 200,
-      videos: list?.flat(),
+      videos: list?.flat().filter((video) => video),
     });
   }
 );
