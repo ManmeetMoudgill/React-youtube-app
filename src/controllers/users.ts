@@ -87,7 +87,7 @@ export const likeVideo = asyncMiddleware(
     const { videoId } = req.params;
 
     const { _id } = (req as CustomRequest)?.user;
-
+    
     const video = await Video.findById<VideoModelType>(videoId);
 
     video?.userLikeTheVideo(_id);

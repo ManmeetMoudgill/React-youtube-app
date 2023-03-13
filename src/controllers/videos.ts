@@ -5,6 +5,8 @@ import createHttpError from "http-errors";
 import { VideoModelType } from "../models/Video";
 import User, { UserModelType } from "../models/User";
 import asyncMiddleware from "../middlewares/catch-async-errors";
+import ApiFeatures from "../utils/fetaures";
+import { ROWS_PER_PAGE } from "../constants";
 
 export const createVideo = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -127,19 +129,21 @@ export const incrementViews = asyncMiddleware(
 
 export const getRandomVideos = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
-    const videos = await Video.aggregate<VideoModelType>([
-      {
-        $sample: { size: 40 },
-      },
-    ]);
+    const count = await new ApiFeatures(Video.find(), req.query).query;
+
+    const videosFeature = new ApiFeatures(Video.find(), req.query);
+
+    videosFeature.pagination(ROWS_PER_PAGE);
+    const videos = await videosFeature.query;
+    const response = videos as VideoModelType[];
 
     //getting the user information on the bases of userId from video
     const videosWithUser = await Promise.all(
-      videos.map(async (video) => {
+      response.map(async (video) => {
         const user = await User.findById<UserModelType>(video?.userId);
-        if (!user) next(createHttpError("401", "User not found"));
+        if (!user) return;
         return {
-          ...video,
+          video,
           user,
         };
       })
@@ -148,7 +152,8 @@ export const getRandomVideos = asyncMiddleware(
     res.status(200).json({
       success: true,
       status: 200,
-      videos: videosWithUser.flat(),
+      videos: videosWithUser.flat()?.filter((video) => video),
+      count: count.length,
       message: "Random videos fetched successfully",
     });
   }
@@ -156,12 +161,35 @@ export const getRandomVideos = asyncMiddleware(
 
 export const getTrendVideos = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
-    const videos = await Video.find().sort({ views: -1 }).limit(40);
+    const count = await new ApiFeatures(Video.find(), req.query).query;
+
+    const videosFeature = new ApiFeatures(Video.find(), req.query);
+
+    videosFeature.pagination(ROWS_PER_PAGE);
+
+    const videos = await videosFeature.query;
+    const response = videos as VideoModelType[];
+    console.log(response?.length);
+
+    //getting the user information on the bases of userId from video
+    const videosWithUser = await Promise.all(
+      response.map(async (video) => {
+        const user = await User.findById<UserModelType>(video?.userId);
+        //if user not found then return skip
+        if (!user) return;
+
+        return {
+          video,
+          user,
+        };
+      })
+    );
 
     res.status(200).json({
       success: true,
       status: 200,
-      videos,
+      videos: videosWithUser.flat()?.filter((video) => video),
+      count: count.length,
       message: "Trend videos fetched successfully",
     });
   }
@@ -182,7 +210,12 @@ export const subscribedChannelVideo = asyncMiddleware(
 
     const list = await Promise.all(
       subscribedUsers?.map((channelId) => {
-        return Video.find({ userId: channelId });
+        const VideosFeature = new ApiFeatures(
+          Video.find({ userId: channelId }),
+          req.query
+        );
+        VideosFeature.pagination(ROWS_PER_PAGE);
+        return VideosFeature.query;
       })
     );
 
@@ -199,8 +232,20 @@ export const getVideosByTags = asyncMiddleware(
     const { tags } = req.query;
     const tagsArray = (tags as string)?.split(",");
 
-    const videos = await Video.find({ tags: { $in: tagsArray } }).limit(20);
+    const count = await new ApiFeatures(
+      Video.find({ tags: { $in: tagsArray } }),
+      req.query
+    ).query;
 
+    const videosFeature = new ApiFeatures(
+      Video.find({ tags: { $in: tagsArray } }),
+      req.query
+    );
+
+    videosFeature.pagination(ROWS_PER_PAGE);
+    const response = await videosFeature.query;
+
+    const videos = response as VideoModelType[];
     const list = await Promise.all(
       videos?.map(async (video) => {
         const user = await User.findById<UserModelType>(video?.userId);
@@ -218,6 +263,7 @@ export const getVideosByTags = asyncMiddleware(
       success: true,
       message: "Videos by tags fetched successfully",
       status: 200,
+      count: count.length,
       videos: list?.flat(),
     });
   }
@@ -225,22 +271,21 @@ export const getVideosByTags = asyncMiddleware(
 
 export const searchVideos = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { q } = req.query;
+    const totalCounts = await new ApiFeatures(Video.find(), req.query).search()
+      .query;
 
-    const videos = await Video.find({
-      $or: [
-        { title: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
-        { tags: { $in: q } },
-      ],
-    }).limit(20);
+    const videosFeature = new ApiFeatures(Video.find(), req.query).search();
 
+    videosFeature.pagination(ROWS_PER_PAGE);
+
+    const videos = await videosFeature.query;
     if (!videos) next(createHttpError("401", "Videos not found"));
 
     res.status(200).json({
       success: true,
       message: "Videos by tags fetched successfully",
       status: 200,
+      totalVideos: totalCounts.length,
       videos,
     });
   }
