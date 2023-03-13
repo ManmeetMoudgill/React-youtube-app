@@ -27,6 +27,26 @@ class ApiFeatures {
     this.query = this.query.find({ ...keyword });
     return this;
   }
+
+  public filter() {
+    const category = this.queryString.category
+      ? {
+          $or: [
+            { title: { $regex: this.queryString.category, $options: "i" } },
+            {
+              description: { $regex: this.queryString.category, $options: "i" },
+            },
+            { tags: { $in: this.queryString.category } },
+          ],
+        }
+      : {};
+
+    this.query =
+      this.queryString.category === "all"
+        ? this.query.find()
+        : this.query.find({ ...category });
+    return this;
+  }
 }
 
 export default ApiFeatures;

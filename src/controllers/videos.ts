@@ -129,14 +129,13 @@ export const incrementViews = asyncMiddleware(
 
 export const getRandomVideos = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
-    const count = await new ApiFeatures(Video.find(), req.query).query;
+    const count = await new ApiFeatures(Video.find(), req.query).filter().query;
 
-    const videosFeature = new ApiFeatures(Video.find(), req.query);
+    const videosFeature = new ApiFeatures(Video.find(), req.query).filter();
 
     videosFeature.pagination(ROWS_PER_PAGE);
     const videos = await videosFeature.query;
     const response = videos as VideoModelType[];
-
     //getting the user information on the bases of userId from video
     const videosWithUser = await Promise.all(
       response.map(async (video) => {
@@ -161,9 +160,9 @@ export const getRandomVideos = asyncMiddleware(
 
 export const getTrendVideos = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
-    const count = await new ApiFeatures(Video.find(), req.query).query;
+    const count = await new ApiFeatures(Video.find(), req.query).filter().query;
 
-    const videosFeature = new ApiFeatures(Video.find(), req.query);
+    const videosFeature = new ApiFeatures(Video.find(), req.query).filter();
 
     videosFeature.pagination(ROWS_PER_PAGE);
 
