@@ -148,10 +148,11 @@ export const getRandomVideos = asyncMiddleware(
       })
     );
 
+
     res.status(200).json({
       success: true,
       status: 200,
-      videos: videosWithUser.flat()?.filter((video) => video),
+      videos: videosWithUser.flat(),
       count: count.length,
       message: "Random videos fetched successfully",
     });
@@ -168,7 +169,6 @@ export const getTrendVideos = asyncMiddleware(
 
     const videos = await videosFeature.query;
     const response = videos as VideoModelType[];
-    console.log(response?.length);
 
     //getting the user information on the bases of userId from video
     const videosWithUser = await Promise.all(
@@ -187,7 +187,7 @@ export const getTrendVideos = asyncMiddleware(
     res.status(200).json({
       success: true,
       status: 200,
-      videos: videosWithUser.flat()?.filter((video) => video),
+      videos: videosWithUser.flat(),
       count: count.length,
       message: "Trend videos fetched successfully",
     });
