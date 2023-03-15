@@ -148,7 +148,6 @@ export const getRandomVideos = asyncMiddleware(
       })
     );
 
-
     res.status(200).json({
       success: true,
       status: 200,
@@ -254,7 +253,7 @@ export const getVideosByTags = asyncMiddleware(
     const list = await Promise.all(
       videos?.map(async (video) => {
         const user = await User.findById<UserModelType>(video?.userId);
-        if (!user) next(createHttpError("401", "User not found"));
+        if (!user) return;
         return {
           video: video,
           user,
@@ -269,7 +268,7 @@ export const getVideosByTags = asyncMiddleware(
       message: "Videos by tags fetched successfully",
       status: 200,
       count: count.length,
-      videos: list?.flat(),
+      videos: list?.flat()?.filter((video) => video),
     });
   }
 );
@@ -284,14 +283,26 @@ export const searchVideos = asyncMiddleware(
     videosFeature.pagination(ROWS_PER_PAGE);
 
     const videos = await videosFeature.query;
-    if (!videos) next(createHttpError("401", "Videos not found"));
+    const response = videos as VideoModelType[];
+
+    const list = await Promise.all(
+      response?.map(async (video) => {
+        const user = await User.findById<UserModelType>(video?.userId);
+        if (!user) return;
+        return {
+          video: video,
+          user,
+        };
+      })
+    );
+    if (!list) next(createHttpError("401", "Videos not found"));
 
     res.status(200).json({
       success: true,
       message: "Videos by tags fetched successfully",
       status: 200,
       totalVideos: totalCounts.length,
-      videos,
+      videos: list?.flat()?.filter((video) => video),
     });
   }
 );
