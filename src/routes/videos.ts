@@ -11,6 +11,8 @@ import {
   subscribedChannelVideo,
   getVideosByTags,
   searchVideos,
+  getVideoCategories,
+  saveVideoCategory,
 } from "../controllers/videos";
 
 const router = express.Router();
@@ -25,5 +27,7 @@ router.get("/trend", getTrendVideos);
 router.get("/sub", verifyToken, subscribedChannelVideo);
 router.get("/search", searchVideos);
 router.get("/tags", getVideosByTags);
+router.get("/categories", getVideoCategories);
+router.post("/category", saveVideoCategory);
 
 export default router;

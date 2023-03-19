@@ -1,12 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import Video from "../models/Video";
-import { CustomRequest } from "../types/auth";
+import { AuthSignJWT, CustomRequest } from "../types/auth";
 import createHttpError from "http-errors";
 import { VideoModelType } from "../models/Video";
 import User, { UserModelType } from "../models/User";
 import asyncMiddleware from "../middlewares/catch-async-errors";
 import ApiFeatures from "../utils/fetaures";
 import { ROWS_PER_PAGE } from "../constants";
+import Categories from "../models/Categories";
+import jwt from "jsonwebtoken";
 
 export const createVideo = asyncMiddleware(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -304,5 +306,67 @@ export const searchVideos = asyncMiddleware(
       totalVideos: totalCounts.length,
       videos: list?.flat()?.filter((video) => video),
     });
+  }
+);
+
+export const getVideoCategories = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const categories = await Categories.find().sort({ name: 1 });
+    if (!categories) next(createHttpError("401", "Categories not found"));
+
+    res.status(200).json({
+      success: true,
+      status: 200,
+      categories,
+      message: "Categories fetched successfully",
+      count: categories?.length,
+    });
+  }
+);
+
+export const saveVideoCategory = asyncMiddleware(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { category } = req.body;
+
+    const { user_token } = req.cookies;
+
+    const decoded = jwt.verify(
+      user_token,
+      process.env.JWT_SECRET_KEY as string
+    );
+
+    if (
+      (decoded as AuthSignJWT)?.email !== process.env.ADMIN_EMAIL ||
+      !user_token
+    ) {
+      return next(
+        createHttpError("401", "You are not authorized to perform this action")
+      );
+    } else {
+      const categoryAlreadyExists = await Categories.findOne({
+        ...category,
+      });
+
+      if (categoryAlreadyExists) {
+        return next(createHttpError("401", "Category already exists"));
+      }
+
+      if (!categoryAlreadyExists) {
+        const data = new Categories({
+          ...category,
+        });
+
+        const savedCategory = await data.save();
+
+        if (!savedCategory) next(createHttpError("401", "Category not saved"));
+
+        res.status(200).json({
+          success: true,
+          status: 200,
+          savedCategory,
+          message: "Category saved successfully",
+        });
+      }
+    }
   }
 );
