@@ -11,6 +11,10 @@ src/.env
 # production
 /build
 
+src/.env
+src/.env.local
+src/.env.development
+src/.env.development.local
 # misc
 .DS_Store
 .env.local
