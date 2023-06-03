@@ -16,7 +16,17 @@ COPY . .
 # Expose the port on which the app will run
 EXPOSE 8000
 
-VOLUME ["/app/react-server/data"]
+#SET ENVIRONMENT VARIABLES
+ENV NODE_ENV=production
+ENV MONGO=mongodb+srv://node-prova:NodeProva123@cluster0.sagsh.mongodb.net/yt?&retryWrites=true&w=majority
+ENV JWT_SECRET_KEY=MANMEETISTHEBESTPERSONINTHEWORLDYOUCANTRUSTHIM
+
+
+
+#build the app
+RUN npm run build:app
+
+
 
 # Start the Node.js server
-CMD ["npm","run","dev"]
+CMD ["npm","run","start"]
