@@ -32,7 +32,7 @@ app.use("/api/videos", videoRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/auth", authRoutes);
 
-//Middleware for error handling is being called here
+//Middleware for error handling
 app.use(ErrorMiddleware);
 
 app.listen(__PORT__, (): void => {
